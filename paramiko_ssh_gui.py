@@ -11,6 +11,8 @@ from tkinter import ttk, messagebox, scrolledtext
 import threading
 import paramiko
 import socket
+import subprocess
+import platform
 
 
 class ParamikoSSHGUI:
@@ -67,6 +69,7 @@ class ParamikoSSHGUI:
         ttk.Button(conn_buttons_frame, text="Connect", command=self.connect_ssh).pack(side=tk.LEFT, padx=5)
         ttk.Button(conn_buttons_frame, text="Disconnect", command=self.disconnect_ssh).pack(side=tk.LEFT, padx=5)
         ttk.Button(conn_buttons_frame, text="Test Connection", command=self.test_connection).pack(side=tk.LEFT, padx=5)
+        ttk.Button(conn_buttons_frame, text="Find Kali VM", command=self.find_kali_vm).pack(side=tk.LEFT, padx=5)
         
         # Connection status
         self.status_var = tk.StringVar(value="Not connected")
@@ -176,7 +179,16 @@ class ParamikoSSHGUI:
             except socket.timeout:
                 self.progress.stop()
                 self.append_output("[-] Connection timed out")
-                messagebox.showerror("Error", "Connection timed out. Check if the host is reachable.")
+                self.append_output("[*] Troubleshooting tips:")
+                self.append_output("  1. Check if the Kali VM is running")
+                self.append_output("  2. Verify the IP address is correct")
+                self.append_output("  3. Check network settings (Bridged/NAT/Host-only)")
+                self.append_output("  4. Run 'find_kali_vm.bat' to discover the correct IP")
+                messagebox.showerror("Error", "Connection timed out. Check network connectivity.")
+            except socket.gaierror as e:
+                self.progress.stop()
+                self.append_output(f"[-] DNS resolution failed: {str(e)}")
+                messagebox.showerror("Error", f"DNS resolution failed: {str(e)}")
             except Exception as e:
                 self.progress.stop()
                 self.append_output(f"[-] Connection failed: {str(e)}")
@@ -223,12 +235,38 @@ class ParamikoSSHGUI:
                 else:
                     self.progress.stop()
                     self.append_output(f"[-] Port {port} is closed on {host}")
+                    self.append_output("[*] Troubleshooting tips:")
+                    self.append_output("  1. Check if the Kali VM is running")
+                    self.append_output("  2. Verify SSH service is running on the VM")
+                    self.append_output("  3. Check firewall settings on the VM")
+                    self.append_output("  4. Run 'find_kali_vm.bat' to discover the correct IP")
                     
             except Exception as e:
                 self.progress.stop()
                 self.append_output(f"[-] Connection test failed: {str(e)}")
                 
         thread = threading.Thread(target=test)
+        thread.daemon = True
+        thread.start()
+        
+    def find_kali_vm(self):
+        """Run the Kali VM discovery tool."""
+        self.append_output("[*] Launching Kali VM discovery tool...")
+        self.append_output("[*] This will scan common IP ranges for Kali Linux VMs")
+        self.append_output("[*] Please wait, this may take a few minutes...")
+        
+        def run_discovery():
+            try:
+                self.progress.start()
+                # Run the discovery script
+                subprocess.run(["find_kali_vm.bat"], shell=True)
+                self.progress.stop()
+                self.append_output("[*] Discovery tool completed")
+            except Exception as e:
+                self.progress.stop()
+                self.append_output(f"[-] Failed to run discovery tool: {str(e)}")
+                
+        thread = threading.Thread(target=run_discovery)
         thread.daemon = True
         thread.start()
         
@@ -250,9 +288,9 @@ class ParamikoSSHGUI:
                 # Execute command
                 if self.ssh_client is not None:
                     exec_result = self.ssh_client.exec_command(command)
-                    # Unpack the result
+                    # Handle the result properly
                     stdin = exec_result[0]
-                    stdout = exec_result[1]
+                    stdout = exec_result[1] 
                     stderr = exec_result[2]
                     
                     # Get output

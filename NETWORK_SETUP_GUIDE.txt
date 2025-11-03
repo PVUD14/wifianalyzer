@@ -1,0 +1,196 @@
+Kali Linux VM Network Setup Guide
+================================
+
+This guide helps you configure your Kali Linux VM for proper network connectivity
+and SSH access for the WiFi penetration testing tool.
+
+VirtualBox Network Configuration
+================================
+
+1. Open VirtualBox Manager
+2. Select your Kali Linux VM
+3. Click "Settings" → "Network"
+4. For Adapter 1:
+   - Enable Network Adapter: Checked
+   - Attached to: Bridged Adapter (recommended for direct network access)
+   - Name: Select your active network interface
+   - Advanced:
+     - Adapter Type: Intel PRO/1000 MT Desktop
+     - Promiscuous Mode: Allow All
+     - Cable Connected: Checked
+
+5. For Adapter 2 (optional, for internet access):
+   - Enable Network Adapter: Checked
+   - Attached to: NAT
+   - Advanced:
+     - Adapter Type: Intel PRO/1000 MT Desktop
+     - Promiscuous Mode: Deny
+     - Cable Connected: Checked
+
+VMware Network Configuration
+============================
+
+1. Open VMware Workstation
+2. Select your Kali Linux VM
+3. Click "Edit virtual machine settings"
+4. For Network Adapter:
+   - Network Connection: Bridged: Connected directly to the physical network
+   - Replicate physical network connection state: Checked
+   - Configure Adapters: Select your active network adapter
+
+Hyper-V Network Configuration
+=============================
+
+1. Open Hyper-V Manager
+2. Select your Kali Linux VM
+3. Click "Settings"
+4. Under Hardware, select "Network Adapter"
+5. Virtual Switch: Select an external virtual switch
+6. MAC Address: Static (optional)
+7. Enable MAC Address Spoofing: Checked
+
+Kali Linux VM Internal Configuration
+===================================
+
+1. Start your Kali Linux VM
+2. Log in as root or a user with sudo privileges
+3. Check network interfaces:
+   ip addr show
+
+4. If no IP address is assigned, configure network:
+   # For DHCP (automatic IP assignment)
+   sudo dhclient eth0
+   
+   # Or set static IP (replace with your network details)
+   sudo nano /etc/network/interfaces
+   # Add:
+   auto eth0
+   iface eth0 inet static
+   address 192.168.1.100
+   netmask 255.255.255.0
+   gateway 192.168.1.1
+   dns-nameservers 8.8.8.8 8.8.4.4
+
+5. Enable and start SSH service:
+   sudo systemctl enable ssh
+   sudo systemctl start ssh
+   sudo systemctl status ssh
+
+6. Check SSH service:
+   sudo netstat -tlnp | grep :22
+   # Should show sshd listening on port 22
+
+7. Configure SSH for password authentication (if needed):
+   sudo nano /etc/ssh/sshd_config
+   # Ensure these lines are present and not commented:
+   PermitRootLogin yes
+   PasswordAuthentication yes
+   PubkeyAuthentication yes
+   
+   # Restart SSH service after changes:
+   sudo systemctl restart ssh
+
+8. Set up user account (if needed):
+   # Add user to sudo group
+   sudo usermod -aG sudo vaptrix
+   
+   # Set password
+   sudo passwd vaptrix
+
+Network Troubleshooting
+=======================
+
+1. If you can't ping the VM:
+   - Check VM network adapter settings
+   - Ensure cable is connected
+   - Verify IP address assignment
+   - Check Windows Firewall settings
+
+2. If SSH connection fails:
+   - Verify SSH service is running
+   - Check SSH port is not blocked by firewall
+   - Ensure correct username/password
+   - Check SSH configuration file
+
+3. Finding your VM's IP address:
+   # In Kali VM terminal:
+   ip addr show
+   # Look for eth0, enp0s3, or similar interface with an IP
+   
+   # Alternative commands:
+   hostname -I
+   ip route get 1.1.1.1 | awk '{print $7}'
+
+4. Testing connectivity from Windows:
+   # Ping the VM
+   ping [VM_IP_ADDRESS]
+   
+   # Test SSH port
+   telnet [VM_IP_ADDRESS] 22
+   # Or with PowerShell:
+   Test-NetConnection -ComputerName [VM_IP_ADDRESS] -Port 22
+
+Common IP Ranges for VMs
+========================
+
+1. VirtualBox NAT: 10.0.2.x
+2. VirtualBox Host-only: 192.168.56.x
+3. VMware NAT: 192.168.1.x or 10.0.x.x
+4. Bridged: Same as your local network range
+
+Security Considerations
+=======================
+
+1. Change default passwords:
+   passwd root
+   passwd vaptrix
+
+2. Configure firewall (if needed):
+   sudo apt install ufw
+   sudo ufw allow ssh
+   sudo ufw allow from [YOUR_WINDOWS_IP] to any port 22
+   sudo ufw enable
+
+3. Consider key-based authentication:
+   # On Windows, generate SSH key pair:
+   ssh-keygen -t rsa -b 4096
+   
+   # Copy public key to Kali VM:
+   ssh-copy-id vaptrix@[VM_IP_ADDRESS]
+
+Testing SSH Connection
+======================
+
+1. From Windows Command Prompt:
+   ssh vaptrix@[VM_IP_ADDRESS]
+   
+2. With specific port:
+   ssh -p 22 vaptrix@[VM_IP_ADDRESS]
+   
+3. With verbose output for debugging:
+   ssh -v vaptrix@[VM_IP_ADDRESS]
+
+4. Using key-based authentication:
+   ssh -i [PRIVATE_KEY_FILE] vaptrix@[VM_IP_ADDRESS]
+
+If you continue to have issues:
+==============================
+
+1. Access VM console directly
+2. Verify network interface is UP:
+   ip link show
+   
+3. Bring interface up if needed:
+   sudo ip link set eth0 up
+   
+4. Restart networking service:
+   sudo systemctl restart networking
+   
+5. Check system logs:
+   journalctl -u ssh
+   dmesg | grep eth
+
+For more help, consult:
+- VirtualBox documentation: https://www.virtualbox.org/wiki/Documentation
+- VMware documentation: https://docs.vmware.com/
+- Kali Linux documentation: https://www.kali.org/docs/
