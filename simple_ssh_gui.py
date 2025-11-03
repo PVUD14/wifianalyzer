@@ -4,6 +4,7 @@ Simple SSH GUI for WiFi Penetration Testing Tool
 
 This GUI provides a user-friendly interface for SSH connections
 and running penetration testing commands on the Kali Linux VM.
+Includes integration with fern-wifi-cracker.
 """
 
 import tkinter as tk
@@ -96,13 +97,23 @@ class SimpleSSHGUI:
         ttk.Label(wifi_frame, text="WiFi Tools:").pack(side=tk.LEFT)
         ttk.Button(wifi_frame, text="Run Scan", command=lambda: self.set_wifi_command("sudo python3 wifi_penetration_tool/main.py")).pack(side=tk.LEFT, padx=5)
         ttk.Button(wifi_frame, text="Interface Manager", command=lambda: self.set_wifi_command("sudo python3 wifi_penetration_tool/main.py --help")).pack(side=tk.LEFT, padx=5)
+        ttk.Button(wifi_frame, text="Run with Fern", command=lambda: self.set_wifi_command("sudo python3 wifi_penetration_tool/main.py --use-fern")).pack(side=tk.LEFT, padx=5)
+        
+        # Fern Integration frame
+        fern_frame = ttk.Frame(cmd_frame)
+        fern_frame.grid(row=3, column=0, columnspan=3, pady=5)
+        
+        ttk.Label(fern_frame, text="Fern Integration:").pack(side=tk.LEFT)
+        ttk.Button(fern_frame, text="Check Fern", command=lambda: self.set_command("which fern-wifi-cracker")).pack(side=tk.LEFT, padx=5)
+        ttk.Button(fern_frame, text="Install Fern", command=lambda: self.set_command("sudo apt update && sudo apt install -y fern-wifi-cracker")).pack(side=tk.LEFT, padx=5)
+        ttk.Button(fern_frame, text="Run Fern Scan", command=lambda: self.set_command("sudo fern-wifi-cracker --cli --scan")).pack(side=tk.LEFT, padx=5)
         
         # Output text area
-        ttk.Label(cmd_frame, text="Output:").grid(row=3, column=0, sticky=tk.W, pady=(10, 2))
+        ttk.Label(cmd_frame, text="Output:").grid(row=4, column=0, sticky=tk.W, pady=(10, 2))
         self.output_text = scrolledtext.ScrolledText(cmd_frame, height=20)
-        self.output_text.grid(row=4, column=0, columnspan=3, sticky=tk.NSEW, pady=2)
+        self.output_text.grid(row=5, column=0, columnspan=3, sticky=tk.NSEW, pady=2)
         
-        cmd_frame.rowconfigure(4, weight=1)
+        cmd_frame.rowconfigure(5, weight=1)
         cmd_frame.columnconfigure(1, weight=1)
         
         # Progress bar

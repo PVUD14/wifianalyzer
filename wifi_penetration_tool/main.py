@@ -8,6 +8,7 @@ This module orchestrates all components of the penetration testing utility:
 - Handshake capturing
 - Client deauthentication
 - Password cracking
+- Fern-wifi-cracker integration
 
 Usage:
     python3 main.py [options]
@@ -27,6 +28,7 @@ from wifi_penetration_tool.scanner import NetworkScanner, NetworkTarget
 from wifi_penetration_tool.sniffer import HandshakeSniffer
 from wifi_penetration_tool.deauther import Deauthenticator
 from wifi_penetration_tool.cracker import PasswordCracker, CrackResult
+from wifi_penetration_tool.fern_integration import FernIntegration
 
 
 class WiFiPenTestTool:
@@ -39,6 +41,7 @@ class WiFiPenTestTool:
         self.sniffer: Optional[HandshakeSniffer] = None
         self.deauther: Optional[Deauthenticator] = None
         self.cracker = PasswordCracker()
+        self.fern_integration = FernIntegration()
         self.args = None
         
         # Register signal handler for graceful shutdown
@@ -81,6 +84,10 @@ class WiFiPenTestTool:
             if not self._is_tool_installed(tool):
                 print(f"[-] Required tool '{tool}' not found. Please install aircrack-ng suite.")
                 return False
+                
+        # Check for fern-wifi-cracker
+        if not self.fern_integration.is_fern_available():
+            print("[!] fern-wifi-cracker is not available. Some features may be limited.")
                 
         return True
 
@@ -262,12 +269,19 @@ class WiFiPenTestTool:
                           help='Set custom wordlist path (default: rockyou.txt)')
         parser.add_argument('-o', '--output-filename',
                           help='Base name for cap/dump/log storage')
+        parser.add_argument('--use-fern', action='store_true',
+                          help='Use fern-wifi-cracker for scanning and attacks')
         
         self.args = parser.parse_args()
         
         # Validate environment
         if not self._validate_environment():
             return 1
+            
+        # If --use-fern flag is set, use fern-wifi-cracker
+        if self.args.use_fern and self.fern_integration.is_fern_available():
+            print("[*] Using fern-wifi-cracker for operations")
+            return self._run_with_fern()
             
         # Determine interface to use
         if not self.args.interface:
@@ -340,6 +354,42 @@ class WiFiPenTestTool:
         
         # Cleanup
         self._cleanup()
+        return 0
+
+    def _run_with_fern(self) -> int:
+        """
+        Run the penetration testing workflow using fern-wifi-cracker.
+        
+        Returns:
+            int: Exit code (0 for success, non-zero for error)
+        """
+        print("[*] Starting penetration test with fern-wifi-cracker")
+        
+        # Determine interface to use
+        interface = self.args.interface if self.args else None
+        if not interface:
+            interface = self._auto_detect_interface()
+            if not interface:
+                print("[-] No wireless interfaces found")
+                return 1
+            print(f"[*] Auto-detected interface: {interface}")
+        else:
+            print(f"[*] Using specified interface: {interface}")
+            
+        # Run fern scan
+        print("[*] Running network scan with fern-wifi-cracker...")
+        scan_output = self.fern_integration.run_fern_scan(interface)
+        if not scan_output:
+            print("[-] Failed to run fern scan")
+            return 1
+            
+        print("[+] Scan completed successfully")
+        print("Scan results:")
+        print(scan_output)
+        
+        # For demo purposes, we'll just show the scan results
+        # In a real implementation, you would parse the results and continue
+        print("[*] To continue with attacks, run without --use-fern flag")
         return 0
 
 

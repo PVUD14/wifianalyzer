@@ -4,6 +4,7 @@ GUI Application for WiFi Penetration Testing Tool
 
 This GUI provides a user-friendly interface for the WiFi penetration testing tool,
 allowing Windows users to easily configure and run scans, captures, and cracking operations.
+It also includes integration with fern-wifi-cracker on the remote Kali VM.
 """
 
 import tkinter as tk
@@ -125,6 +126,14 @@ class WiFiPenTestGUI:
         ttk.Button(ssh_buttons_frame, text="Connect", command=self.connect_ssh).pack(side=tk.LEFT, padx=5)
         ttk.Button(ssh_buttons_frame, text="Disconnect", command=self.disconnect_ssh).pack(side=tk.LEFT, padx=5)
         
+        # Fern Integration frame
+        fern_frame = ttk.LabelFrame(self.ssh_frame, text="Fern-WiFi-Cracker Integration", padding=10)
+        fern_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        ttk.Button(fern_frame, text="Check Fern Availability", command=self.check_fern).pack(side=tk.LEFT, padx=5)
+        ttk.Button(fern_frame, text="Install Fern", command=self.install_fern).pack(side=tk.LEFT, padx=5)
+        ttk.Button(fern_frame, text="Run Fern Scan", command=self.run_fern_scan).pack(side=tk.LEFT, padx=5)
+        
         # SSH Command frame
         ssh_cmd_frame = ttk.LabelFrame(self.ssh_frame, text="SSH Commands", padding=10)
         ssh_cmd_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
@@ -152,6 +161,7 @@ class WiFiPenTestGUI:
         ttk.Button(predefined_frame, text="Run Scan", command=lambda: self.execute_predefined_command("sudo python3 wifi_penetration_tool/main.py")).pack(side=tk.LEFT, padx=5)
         ttk.Button(predefined_frame, text="Check Interfaces", command=lambda: self.execute_predefined_command("iw dev")).pack(side=tk.LEFT, padx=5)
         ttk.Button(predefined_frame, text="Check Tools", command=lambda: self.execute_predefined_command("which airodump-ng aireplay-ng aircrack-ng")).pack(side=tk.LEFT, padx=5)
+        ttk.Button(predefined_frame, text="Run with Fern", command=lambda: self.execute_predefined_command("sudo python3 wifi_penetration_tool/main.py --use-fern")).pack(side=tk.LEFT, padx=5)
         
     def auto_detect_interface(self):
         try:
@@ -300,6 +310,35 @@ class WiFiPenTestGUI:
             
         self.ssh_command_var.set(command)
         self.execute_ssh_command()
+        
+    def check_fern(self):
+        """Check if fern-wifi-cracker is available on the remote system."""
+        if not self.is_connected:
+            messagebox.showerror("Error", "Not connected to SSH session")
+            return
+            
+        self.append_ssh_output("[*] Checking fern-wifi-cracker availability...")
+        self.execute_predefined_command("which fern-wifi-cracker")
+        
+    def install_fern(self):
+        """Install fern-wifi-cracker on the remote system."""
+        if not self.is_connected:
+            messagebox.showerror("Error", "Not connected to SSH session")
+            return
+            
+        result = messagebox.askyesno("Install Fern", "This will install fern-wifi-cracker on the remote system. Continue?")
+        if result:
+            self.append_ssh_output("[*] Installing fern-wifi-cracker...")
+            self.execute_predefined_command("sudo apt update && sudo apt install -y fern-wifi-cracker")
+            
+    def run_fern_scan(self):
+        """Run a scan using fern-wifi-cracker."""
+        if not self.is_connected:
+            messagebox.showerror("Error", "Not connected to SSH session")
+            return
+            
+        self.append_ssh_output("[*] Running fern-wifi-cracker scan...")
+        self.execute_predefined_command("sudo fern-wifi-cracker --cli --scan")
 
 
 def main():

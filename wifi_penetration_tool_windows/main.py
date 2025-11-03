@@ -8,6 +8,7 @@ This module orchestrates all components of the penetration testing utility:
 - Handshake capturing
 - Client deauthentication
 - Password cracking
+- Fern-wifi-cracker integration (remote)
 
 Usage:
     python3 main.py [options]
@@ -27,6 +28,7 @@ from wifi_penetration_tool_windows.scanner import NetworkScanner, NetworkTarget
 from wifi_penetration_tool_windows.sniffer import HandshakeSniffer
 from wifi_penetration_tool_windows.deauther import Deauthenticator
 from wifi_penetration_tool_windows.cracker import PasswordCracker, CrackResult
+from wifi_penetration_tool_windows.fern_integration import FernIntegration
 
 
 class WiFiPenTestTool:
@@ -39,6 +41,7 @@ class WiFiPenTestTool:
         self.sniffer: Optional[HandshakeSniffer] = None
         self.deauther: Optional[Deauthenticator] = None
         self.cracker = PasswordCracker()
+        self.fern_integration = FernIntegration()
         self.args = None
         
         # Register signal handler for graceful shutdown
@@ -82,6 +85,10 @@ class WiFiPenTestTool:
             if not self._is_tool_installed(tool):
                 print(f"[-] Required tool '{tool}' not found.")
                 return False
+                
+        # Check for SSH connectivity to Kali VM
+        if not self.fern_integration._check_ssh_connection():
+            print("[!] Cannot connect to Kali Linux VM. fern-wifi-cracker features will be limited.")
                 
         return True
 
@@ -261,12 +268,19 @@ class WiFiPenTestTool:
                           help='Set custom wordlist path (default: C:\\Users\\Public\\wordlist.txt)')
         parser.add_argument('-o', '--output-filename',
                           help='Base name for cap/dump/log storage')
+        parser.add_argument('--use-fern', action='store_true',
+                          help='Use fern-wifi-cracker on remote Kali VM')
         
         self.args = parser.parse_args()
         
         # Validate environment
         if not self._validate_environment():
             return 1
+            
+        # If --use-fern flag is set, use fern-wifi-cracker
+        if self.args.use_fern and self.fern_integration._check_ssh_connection():
+            print("[*] Using fern-wifi-cracker on remote Kali VM")
+            return self._run_with_fern()
             
         # Determine interface to use
         if not self.args.interface:
@@ -339,6 +353,44 @@ class WiFiPenTestTool:
         
         # Cleanup
         self._cleanup()
+        return 0
+
+    def _run_with_fern(self) -> int:
+        """
+        Run the penetration testing workflow using fern-wifi-cracker on remote Kali VM.
+        
+        Returns:
+            int: Exit code (0 for success, non-zero for error)
+        """
+        print("[*] Starting penetration test with fern-wifi-cracker on remote Kali VM")
+        
+        # Check if fern is available
+        if not self.fern_integration.is_fern_available():
+            print("[-] fern-wifi-cracker is not available on the remote system")
+            install = input("Do you want to try installing it? (y/n): ")
+            if install.lower() == 'y':
+                if not self.fern_integration.install_fern():
+                    print("[-] Installation failed")
+                    return 1
+                else:
+                    print("[+] fern-wifi-cracker installed successfully")
+            else:
+                return 1
+        
+        # Run fern scan
+        print("[*] Running network scan with fern-wifi-cracker...")
+        scan_output = self.fern_integration.start_fern_scan()
+        if not scan_output:
+            print("[-] Failed to run fern scan")
+            return 1
+            
+        print("[+] Scan completed successfully")
+        print("Scan results:")
+        print(scan_output)
+        
+        # For demo purposes, we'll just show the scan results
+        # In a real implementation, you would parse the results and continue
+        print("[*] To continue with attacks, use the fern-wifi-cracker GUI directly")
         return 0
 
 

@@ -1,0 +1,139 @@
+Fern-WiFi-Cracker Integration Guide
+=================================
+
+This guide explains how to install and use fern-wifi-cracker with the WiFi Penetration Testing Tool.
+
+Installing Fern-WiFi-Cracker
+============================
+
+Method 1: Automatic Installation (Recommended)
+--------------------------------------------
+1. Run the install_fern_kali.bat script from Windows:
+   - Double-click install_fern_kali.bat
+   - This will automatically upload and run the setup script on your Kali VM
+
+Method 2: Manual Installation on Kali Linux
+------------------------------------------
+1. Connect to your Kali VM via SSH:
+   ssh vaptrix@172.18.0.1
+
+2. Update package list:
+   sudo apt update
+
+3. Install fern-wifi-cracker:
+   sudo apt install fern-wifi-cracker
+
+4. Verify installation:
+   which fern-wifi-cracker
+
+Using Fern-WiFi-Cracker with the Tool
+====================================
+
+Command Line Usage
+------------------
+1. Run the tool with fern integration:
+   sudo python3 wifi_penetration_tool/main.py --use-fern
+
+2. Specify interface if needed:
+   sudo python3 wifi_penetration_tool/main.py --use-fern -i wlan1
+
+GUI Usage
+---------
+1. Run the SSH GUI:
+   run_ssh_gui.bat
+
+2. Connect to your Kali VM (172.18.0.1, vaptrix, Xevyte@2025)
+
+3. Use the "Fern Integration" section to:
+   - Check if fern is available
+   - Install fern if needed
+   - Run fern scans
+
+4. Or use the "Run with Fern" button in the WiFi Tools section
+
+Fern-WiFi-Cracker Features
+=========================
+
+Network Scanning
+----------------
+- Automatic detection of wireless networks
+- Signal strength analysis
+- Encryption type detection
+- Client device identification
+
+Attack Capabilities
+-------------------
+- WEP cracking using multiple techniques
+- WPA/WPA2 dictionary attacks
+- WPS PIN attacks
+- Evil Twin attacks
+- Session hijacking
+
+GUI Features
+------------
+- Interactive network map
+- Real-time attack progress
+- Automated attack sequences
+- Detailed reporting
+
+Integration Benefits
+====================
+
+1. Enhanced Network Discovery
+   - More comprehensive scanning capabilities
+   - Better signal analysis
+   - Advanced filtering options
+
+2. Extended Attack Surface
+   - Additional cracking methods
+   - WPS vulnerability testing
+   - Advanced MITM capabilities
+
+3. Improved User Experience
+   - Graphical network visualization
+   - Automated workflows
+   - Professional reporting
+
+Testing Fern Integration
+========================
+
+1. Run the integration tests:
+   test_fern.bat
+
+2. Verify local and remote connectivity
+
+3. Check fern availability on both systems
+
+Troubleshooting
+===============
+
+Common Issues
+-------------
+1. "fern-wifi-cracker: command not found"
+   - Reinstall using the automatic installer
+   - Check PATH environment variable
+
+2. "Permission denied" errors
+   - Ensure you're running with sudo/root privileges
+   - Check file permissions on fern installation
+
+3. SSH connection failures
+   - Verify Kali VM is running
+   - Check IP address and credentials
+   - Ensure SSH service is enabled on Kali
+
+4. GUI not responding
+   - Restart the GUI application
+   - Check network connectivity
+   - Verify fern is properly installed
+
+Security Considerations
+=======================
+
+1. Only use on networks you own or have explicit permission to test
+2. Keep credentials secure
+3. Update fern-wifi-cracker regularly
+4. Follow responsible disclosure practices
+
+For more information about fern-wifi-cracker, visit:
+https://github.com/savio-code/fern-wifi-cracker
