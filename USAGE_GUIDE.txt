@@ -1,0 +1,106 @@
+WiFi Penetration Testing Tool - Usage Guide
+=========================================
+
+This package provides two GUI applications for Windows users:
+
+1. Local Windows GUI (wifi_tool_gui.py)
+   - Run with: run_gui.bat
+   - Provides a user-friendly interface for running the Windows-compatible version
+   - Simulates WiFi penetration testing operations
+
+2. SSH Connection GUI (simple_ssh_gui.py)
+   - Run with: run_ssh_gui.bat
+   - Provides SSH connectivity to your Kali Linux VM
+   - Allows execution of commands on the remote system
+
+Initial Setup:
+=============
+1. Run setup_complete.bat to install required dependencies
+2. Make sure your Kali Linux VM is running and accessible
+3. Verify network connectivity to the VM (172.18.0.1)
+
+Using the Local Windows GUI:
+===========================
+1. Double-click run_gui.bat
+2. The GUI has two tabs:
+   - Local Windows: For running the Windows-compatible version
+   - Kali Linux SSH: For SSH connectivity (simulated in this version)
+3. Enter interface details and run scans, captures, or cracking operations
+
+Using the SSH Connection GUI:
+============================
+1. Double-click run_ssh_gui.bat
+2. Verify the connection details:
+   - Host: 172.18.0.1 (your Kali VM)
+   - Username: vaptrix
+   - Password: Xevyte@2025
+   - Port: 22 (default SSH port)
+3. Click "Test Connection" to verify network connectivity
+4. Click "Show SSH Command" to get the SSH command for manual use
+5. Enter commands in the command field and click "Execute via SSH"
+6. Use the quick command buttons for common operations
+
+Troubleshooting Network Issues:
+==============================
+If you cannot connect to your Kali VM:
+
+1. Check if the VM is running
+2. Verify the IP address (172.18.0.1) is correct
+3. Check network settings (Bridged/NAT/Host-only adapter)
+4. Ensure SSH is enabled on the Kali VM:
+   - sudo systemctl status ssh
+   - sudo systemctl start ssh (if not running)
+5. Check Windows Firewall settings
+6. Try pinging the VM from Windows command prompt:
+   - ping 172.18.0.1
+
+Kali Linux VM Configuration:
+===========================
+To ensure your Kali VM is properly configured:
+
+1. SSH Service:
+   - sudo systemctl status ssh
+   - sudo systemctl start ssh (if not running)
+   - sudo systemctl enable ssh (to start automatically)
+
+2. Network Tools:
+   - Ensure aircrack-ng suite is installed:
+     sudo apt update
+     sudo apt install aircrack-ng
+
+3. Python Dependencies:
+   - The penetration testing tool should be in the home directory
+   - Make sure it's properly installed and configured
+
+Connecting Manually via SSH:
+===========================
+If you prefer to connect manually:
+
+1. Open Command Prompt or PowerShell
+2. Run: ssh vaptrix@172.18.0.1
+3. Enter password: Xevyte@2025
+4. Navigate to the tool directory and run commands
+
+Running Penetration Testing Commands:
+====================================
+Once connected to your Kali VM:
+
+1. Navigate to the tool directory:
+   cd wifi_penetration_tool
+
+2. Run a basic scan:
+   sudo python3 main.py
+
+3. Run with specific options:
+   sudo python3 main.py -i wlan1
+   sudo python3 main.py -t 00:11:22:33:44:55 -c 6
+   sudo python3 main.py -d /path/to/wordlist.txt
+
+Security Notes:
+==============
+- Only use these tools on networks you own or have explicit permission to test
+- Be aware of legal implications in your jurisdiction
+- Use responsibly and ethically
+- Keep credentials secure and change default passwords
+
+For more detailed instructions, refer to README.md and README_WINDOWS.md

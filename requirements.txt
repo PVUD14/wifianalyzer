@@ -1,0 +1,13 @@
+# WiFi Penetration Testing Tool Requirements
+
+# System dependencies (installed via package manager)
+# These should be installed manually as they're system tools:
+# - aircrack-ng suite (airodump-ng, aireplay-ng, aircrack-ng)
+# - iw
+# - macchanger
+# - tshark
+
+# Python version requirement
+python>=3.8
+
+# No additional Python packages needed as we're using standard library only
