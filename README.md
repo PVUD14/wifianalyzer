@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # WiFi Penetration Testing Tool
 
 A modular Python-based penetration testing utility targeting IEEE 802.11 networks. The tool performs passive/active handshake grabbing followed by offline dictionary-based WPA/WPA2 PSK cracking while maintaining connectivity through an alternate NIC.
@@ -144,3 +145,6 @@ To test this tool manually inside Kali Linux/VirtualBox with two ALFA-compatible
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+=======
+# wifianalyzer
+>>>>>>> ec0ba782094c10a3153e8d0bf65511b32cea47c6
