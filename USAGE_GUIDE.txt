@@ -1,17 +1,22 @@
 WiFi Penetration Testing Tool - Usage Guide
 =========================================
 
-This package provides two GUI applications for Windows users:
+This package provides multiple GUI applications for Windows users:
 
 1. Local Windows GUI (wifi_tool_gui.py)
    - Run with: run_gui.bat
    - Provides a user-friendly interface for running the Windows-compatible version
    - Simulates WiFi penetration testing operations
 
-2. SSH Connection GUI (simple_ssh_gui.py)
+2. Simple SSH Connection GUI (simple_ssh_gui.py)
    - Run with: run_ssh_gui.bat
-   - Provides SSH connectivity to your Kali Linux VM
+   - Provides SSH connectivity to your Kali Linux VM using system SSH
    - Allows execution of commands on the remote system
+
+3. Paramiko SSH Connection GUI (paramiko_ssh_gui.py)
+   - Run with: run_paramiko_ssh_gui.bat
+   - Provides SSH connectivity to your Kali Linux VM using Python paramiko library
+   - Full-featured SSH implementation with better error handling
 
 Initial Setup:
 =============
@@ -27,8 +32,8 @@ Using the Local Windows GUI:
    - Kali Linux SSH: For SSH connectivity (simulated in this version)
 3. Enter interface details and run scans, captures, or cracking operations
 
-Using the SSH Connection GUI:
-============================
+Using the Simple SSH GUI:
+========================
 1. Double-click run_ssh_gui.bat
 2. Verify the connection details:
    - Host: 172.18.0.1 (your Kali VM)
@@ -39,6 +44,19 @@ Using the SSH Connection GUI:
 4. Click "Show SSH Command" to get the SSH command for manual use
 5. Enter commands in the command field and click "Execute via SSH"
 6. Use the quick command buttons for common operations
+
+Using the Paramiko SSH GUI:
+==========================
+1. Double-click run_paramiko_ssh_gui.bat
+2. Verify the connection details:
+   - Host: 172.18.0.1 (your Kali VM)
+   - Username: vaptrix
+   - Password: Xevyte@2025
+   - Port: 22 (default SSH port)
+3. Click "Connect" to establish SSH connection
+4. Once connected, enter commands in the command field and click "Execute"
+5. Use the quick command buttons for common operations
+6. This version provides better error handling and feedback
 
 Troubleshooting Network Issues:
 ==============================
@@ -95,6 +113,7 @@ Once connected to your Kali VM:
    sudo python3 main.py -i wlan1
    sudo python3 main.py -t 00:11:22:33:44:55 -c 6
    sudo python3 main.py -d /path/to/wordlist.txt
+   sudo python3 main.py --use-fern
 
 Security Notes:
 ==============

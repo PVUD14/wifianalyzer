@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
 """
-Enhanced SSH GUI for WiFi Penetration Testing Tool
+Paramiko-based SSH GUI for WiFi Penetration Testing Tool
 
-This GUI provides SSH connectivity to the Kali Linux VM and allows
-running penetration testing commands remotely.
+This GUI provides actual SSH connectivity to the Kali Linux VM using paramiko
+and allows running penetration testing commands remotely.
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext, filedialog
-import subprocess
+from tkinter import ttk, messagebox, scrolledtext
 import threading
-import os
 import paramiko
-import time
+import socket
 
 
-class SSHGUI:
+class ParamikoSSHGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("WiFi Penetration Tool - SSH Connection")
+        self.root.title("WiFi Penetration Tool - Paramiko SSH")
         self.root.geometry("900x700")
         self.root.resizable(True, True)
         
@@ -31,10 +29,9 @@ class SSHGUI:
         # SSH Client
         self.ssh_client = None
         self.is_connected = False
-        self.ssh_shell = None
         
         # Command variables
-        self.command_var = tk.StringVar()
+        self.command_var = tk.StringVar(value="uname -a")
         
         self.create_widgets()
         
@@ -92,19 +89,19 @@ class SSHGUI:
         quick_frame.grid(row=1, column=0, columnspan=3, pady=10)
         
         ttk.Label(quick_frame, text="Quick Commands:").pack(side=tk.LEFT)
-        ttk.Button(quick_frame, text="System Info", command=lambda: self.run_quick_command("uname -a")).pack(side=tk.LEFT, padx=5)
-        ttk.Button(quick_frame, text="Network Interfaces", command=lambda: self.run_quick_command("iw dev")).pack(side=tk.LEFT, padx=5)
-        ttk.Button(quick_frame, text="Check Tools", command=lambda: self.run_quick_command("which airodump-ng aireplay-ng aircrack-ng")).pack(side=tk.LEFT, padx=5)
-        ttk.Button(quick_frame, text="List Interfaces", command=lambda: self.run_quick_command("ip link show")).pack(side=tk.LEFT, padx=5)
+        ttk.Button(quick_frame, text="System Info", command=lambda: self.set_command("uname -a")).pack(side=tk.LEFT, padx=5)
+        ttk.Button(quick_frame, text="Network Interfaces", command=lambda: self.set_command("iw dev")).pack(side=tk.LEFT, padx=5)
+        ttk.Button(quick_frame, text="Check Tools", command=lambda: self.set_command("which airodump-ng aireplay-ng aircrack-ng")).pack(side=tk.LEFT, padx=5)
+        ttk.Button(quick_frame, text="List Interfaces", command=lambda: self.set_command("ip link show")).pack(side=tk.LEFT, padx=5)
         
         # WiFi Pen Testing commands
         wifi_frame = ttk.Frame(cmd_frame)
         wifi_frame.grid(row=2, column=0, columnspan=3, pady=5)
         
         ttk.Label(wifi_frame, text="WiFi Tools:").pack(side=tk.LEFT)
-        ttk.Button(wifi_frame, text="Run Scan", command=lambda: self.run_wifi_command("sudo python3 wifi_penetration_tool/main.py")).pack(side=tk.LEFT, padx=5)
-        ttk.Button(wifi_frame, text="Interface Manager", command=lambda: self.run_wifi_command("sudo python3 wifi_penetration_tool/main.py --help")).pack(side=tk.LEFT, padx=5)
-        ttk.Button(wifi_frame, text="Run with Fern", command=lambda: self.run_wifi_command("sudo python3 wifi_penetration_tool/main.py --use-fern")).pack(side=tk.LEFT, padx=5)
+        ttk.Button(wifi_frame, text="Run Scan", command=lambda: self.set_command("sudo python3 wifi_penetration_tool/main.py")).pack(side=tk.LEFT, padx=5)
+        ttk.Button(wifi_frame, text="Interface Manager", command=lambda: self.set_command("sudo python3 wifi_penetration_tool/main.py --help")).pack(side=tk.LEFT, padx=5)
+        ttk.Button(wifi_frame, text="Run with Fern", command=lambda: self.set_command("sudo python3 wifi_penetration_tool/main.py --use-fern")).pack(side=tk.LEFT, padx=5)
         
         # Output text area
         ttk.Label(cmd_frame, text="Output:").grid(row=3, column=0, sticky=tk.W, pady=(10, 2))
@@ -126,6 +123,9 @@ class SSHGUI:
     def update_status(self, text, color="black"):
         self.status_var.set(text)
         self.status_label.configure(foreground=color)
+        
+    def set_command(self, command):
+        self.command_var.set(command)
         
     def connect_ssh(self):
         if self.is_connected:
@@ -173,6 +173,10 @@ class SSHGUI:
                 self.progress.stop()
                 self.append_output(f"[-] SSH error: {str(e)}")
                 messagebox.showerror("Error", f"SSH error: {str(e)}")
+            except socket.timeout:
+                self.progress.stop()
+                self.append_output("[-] Connection timed out")
+                messagebox.showerror("Error", "Connection timed out. Check if the host is reachable.")
             except Exception as e:
                 self.progress.stop()
                 self.append_output(f"[-] Connection failed: {str(e)}")
@@ -183,12 +187,13 @@ class SSHGUI:
         thread.start()
         
     def disconnect_ssh(self):
-        if not self.is_connected or not self.ssh_client:
+        if not self.is_connected:
             messagebox.showinfo("Info", "No active SSH connection")
             return
             
         try:
-            self.ssh_client.close()
+            if self.ssh_client:
+                self.ssh_client.close()
             self.ssh_client = None
             self.is_connected = False
             self.update_status("Not connected", "red")
@@ -206,7 +211,6 @@ class SSHGUI:
                 self.append_output(f"[*] Testing connection to {host}:{port}...")
                 
                 # Test TCP connection
-                import socket
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.settimeout(5)
                 result = sock.connect_ex((host, port))
@@ -229,7 +233,7 @@ class SSHGUI:
         thread.start()
         
     def execute_command(self):
-        if not self.is_connected or not self.ssh_client:
+        if not self.is_connected:
             messagebox.showerror("Error", "Not connected to SSH session")
             return
             
@@ -243,23 +247,24 @@ class SSHGUI:
                 self.progress.start()
                 self.append_output(f"$ {command}")
                 
-                # Check if ssh_client is properly initialized
-                if self.ssh_client is None:
-                    self.progress.stop()
-                    self.append_output("[-] SSH client not initialized")
-                    return
-                    
                 # Execute command
-                stdin, stdout, stderr = self.ssh_client.exec_command(command)
-                
-                # Get output
-                output = stdout.read().decode('utf-8')
-                error = stderr.read().decode('utf-8')
-                
-                if output:
-                    self.append_output(output)
-                if error:
-                    self.append_output(f"Errors:\n{error}")
+                if self.ssh_client is not None:
+                    exec_result = self.ssh_client.exec_command(command)
+                    # Unpack the result
+                    stdin = exec_result[0]
+                    stdout = exec_result[1]
+                    stderr = exec_result[2]
+                    
+                    # Get output
+                    output = stdout.read().decode('utf-8')
+                    error = stderr.read().decode('utf-8')
+                    
+                    if output:
+                        self.append_output(output)
+                    if error:
+                        self.append_output(f"Errors:\n{error}")
+                else:
+                    self.append_output("[-] SSH client is not initialized")
                     
                 self.progress.stop()
                 
@@ -270,19 +275,11 @@ class SSHGUI:
         thread = threading.Thread(target=execute)
         thread.daemon = True
         thread.start()
-        
-    def run_quick_command(self, command):
-        self.command_var.set(command)
-        self.execute_command()
-        
-    def run_wifi_command(self, command):
-        self.command_var.set(command)
-        self.execute_command()
 
 
 def main():
     root = tk.Tk()
-    app = SSHGUI(root)
+    app = ParamikoSSHGUI(root)
     root.mainloop()
 
 
